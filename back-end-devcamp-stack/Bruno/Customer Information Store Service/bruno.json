@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Customer Information Store Service",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
