@@ -1,0 +1,22 @@
+meta {
+  name: Add Account Type
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseurl}}:{{port_customer}}/v1/accountTypes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "description": "foo",
+      "name": "checking account"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

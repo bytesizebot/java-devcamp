@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Credit Check Service",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
