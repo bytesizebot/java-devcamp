@@ -36,10 +36,10 @@ public class Product {
     @OneToOne(cascade = CascadeType.ALL)
     private FulfilmentType fulfilmentType;
 
-    @OneToMany(mappedBy = "QualifyingAccounts", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QualifyingAccounts> qualifyingAccounts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "QualifyingCustomerTypes", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QualifyingCustomerTypes> qualifyingCustomerTypes = new ArrayList<>();
 
     public Product(String name, String description, Float price, String ImageUrl) {
