@@ -3,6 +3,7 @@ package za.co.entelect.java_devcamp.service;
 import org.springframework.stereotype.Service;
 import za.co.entelect.java_devcamp.dto.ProductDto;
 import za.co.entelect.java_devcamp.entity.Product;
+import za.co.entelect.java_devcamp.exception.ResourceFoundException;
 import za.co.entelect.java_devcamp.mapper.ProductMapper;
 import za.co.entelect.java_devcamp.repository.ProductRepository;
 
@@ -22,7 +23,13 @@ public class ProductService implements IProductService {
     @Override
     public List<ProductDto> getProducts() {
         List<Product> products = productRepository.findAll();
-
         return products.stream().map(productMapper::toDto).toList();
+    }
+
+    @Override
+    public ProductDto getProductById(Long id) {
+       Product product =  productRepository.findById(id)
+                .orElseThrow(() -> new ResourceFoundException(("Product not found with id: ") + id));
+        return productMapper.toDto(product);
     }
 }

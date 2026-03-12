@@ -1,18 +1,34 @@
 package za.co.entelect.java_devcamp.configs;
 
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+//import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
+
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+//@SecurityScheme(
+//        name = "Bearer Authentication",
+//        type = SecuritySchemeType.HTTP,
+//        bearerFormat = "JWT",
+//        scheme = "bearer"
+//)
 @Configuration
 public class SwaggerConfig {
 
-    final String bearerScheme = "bearerAuth";
-    final String apiKeyScheme = "apiKeyAuth";
+    final String securitySchemeName= "bearerAuth";
+
+    private SecurityScheme createAPIKeyScheme() {
+        return new SecurityScheme().type(SecurityScheme.Type.HTTP)
+                .name("Bearer Authentication")
+                .bearerFormat("JWT")
+                .scheme("bearer");
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -22,21 +38,17 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .description("This document provides API details for the Product Shop Spring Boot Project"))
                 .addSecurityItem(new SecurityRequirement()
-                        .addList(bearerScheme)
-                        .addList(apiKeyScheme))
-                .components(new Components()
-                        .addSecuritySchemes(bearerScheme,
-                                new SecurityScheme()
-                                        .name(bearerScheme)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT"))
-                        .addSecuritySchemes(apiKeyScheme,
-                                new SecurityScheme()
-                                        .name("X-API-KEY")
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER))
-                );
+                        .addList(securitySchemeName))
+                .components(new Components().addSecuritySchemes
+                        ("Bearer Authentication", createAPIKeyScheme()));
+
     }
 
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/**")
+                .build();
+    }
 }

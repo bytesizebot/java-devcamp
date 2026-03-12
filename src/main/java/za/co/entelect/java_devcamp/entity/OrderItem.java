@@ -1,27 +1,29 @@
 package za.co.entelect.java_devcamp.entity;
 
-
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Qualifying_Accounts", schema = "public")
+@Table(name = "OrderItem", schema = "public")
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
-public class QualifyingAccounts {
+public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
-    private Long QualifyingAccountsId;
-
-    @Column private Long accountId;
+    @Column(name = "order_item_id", nullable = false)
+    private Long orderItemId;
 
     @ManyToOne
     @JoinColumn(name = "ProductId")
     private Product product;
 
+    @ManyToOne
+    @JoinColumn(name = "OrderId")
+    private Order order;
 
 }
