@@ -5,9 +5,11 @@ import java.util.List;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CustomerDto {
 
-    private Integer Id;
+    private Long Id;
     private String username;
     private String firstName;
     private String lastName;

@@ -51,10 +51,10 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public boolean isEligibleForProduct(String customerEmail, Long productId, String jwtToken) {
+    public boolean isEligibleForProduct(String customerEmail, Long productId) {
 
         //get customer by Email from CIS
-        CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail, jwtToken);
+        CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail);
 
         //using customer, get the customerTypeId && customerAccounts[]
         Long customerTypeId = Long.valueOf(customer.getCustomerTypeId());

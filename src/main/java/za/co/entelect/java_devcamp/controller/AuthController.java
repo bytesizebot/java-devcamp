@@ -2,18 +2,21 @@ package za.co.entelect.java_devcamp.controller;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import za.co.entelect.java_devcamp.dto.UserDto;
 import za.co.entelect.java_devcamp.exception.IncorrectPasswordException;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.request.LogInRequest;
 import za.co.entelect.java_devcamp.response.LogInResponse;
 import za.co.entelect.java_devcamp.service.IUserService;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("auth")
@@ -22,9 +25,19 @@ import za.co.entelect.java_devcamp.service.IUserService;
 public class AuthController {
 
     private final IUserService iuserService;
+    private final RestTemplate restTemplate;
+    @Value("${auth.service.url}")
+    private String authServiceUrl;
 
-    public AuthController(IUserService iuserService) {
+    @Value("${auth.service.client.username}")
+    private String authServiceUsername;
+
+    @Value("${auth.service.client.password}")
+    private String authServicePassword;
+
+    public AuthController(IUserService iuserService, RestTemplate restTemplate) {
         this.iuserService = iuserService;
+        this.restTemplate = restTemplate;
     }
 
     @PostMapping("/register")
@@ -43,6 +56,20 @@ public class AuthController {
     public ResponseEntity<LogInResponse> logIn(@RequestBody LogInRequest userDto) {
         try {
             LogInResponse response = iuserService.logIn(userDto);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(authServiceUsername,authServicePassword);
+
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(
+                    Map.of("username", userDto.username()), headers);
+
+            ResponseEntity<String> authResponse =
+                    restTemplate.postForEntity(authServiceUrl, entity, String.class);
+
+            String token = authResponse.getBody();
+
+            response.setToken(token);
+
             return ResponseEntity.ok(response);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

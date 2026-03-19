@@ -23,22 +23,22 @@ public class ProfileController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ProfileDto> createUserProfile(@RequestBody ProfileDto profileDto){
-            iProfileService.createUserProfile(profileDto);
+    public ResponseEntity<ProfileDto> createUserProfile(@RequestBody ProfileDto profileDto) {
+        iProfileService.createUserProfile(profileDto);
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(profileDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(profileDto);
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<ProfileDto> getUserProfile(@PathVariable String username){
+    public ResponseEntity<ProfileDto> getUserProfile(@PathVariable String username) {
         try {
             ProfileDto profile = iProfileService.getProfileByUserName(username);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(profile);
         } catch (ResourceNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .build();
         }
     }
 }
