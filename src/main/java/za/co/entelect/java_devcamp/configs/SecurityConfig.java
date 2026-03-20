@@ -42,7 +42,8 @@ public class SecurityConfig {
                                 "/products/{id}",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/token"
+                                "/token",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -3,9 +3,11 @@ package za.co.entelect.java_devcamp.webclient;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import za.co.entelect.java_devcamp.customerdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.ProfileDto;
 
@@ -40,6 +42,15 @@ public class CISWebService {
                             .build())
                     .header(HttpHeaders.AUTHORIZATION, authHeader)
                     .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError(),
+                            response -> {
+                                if (response.statusCode() == HttpStatus.NOT_FOUND) {
+                                    return Mono.empty();
+                                }
+                                return response.createException();
+                            }
+                    )
                     .bodyToMono(CustomerDto.class)
                     .block();
         } catch (Exception e) {
@@ -58,10 +69,10 @@ public class CISWebService {
         try {
             return webClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/v1/customer/")
-                            .queryParam("verbose", true)
+                            .path("/v1/customer")
                             .build())
                     .header(HttpHeaders.AUTHORIZATION, authHeader)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .bodyValue(profileDto)
                     .retrieve()
                     .bodyToMono(ProfileDto.class)

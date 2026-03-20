@@ -16,7 +16,6 @@ public class JwtConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() throws Exception {
-        // Load PEM file from resources
         InputStream is = getClass().getResourceAsStream("/app.pub");
         String key = new String(is.readAllBytes())
                 .replace("-----BEGIN PUBLIC KEY-----", "")
@@ -28,7 +27,6 @@ public class JwtConfig {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         RSAPublicKey publicKey = (RSAPublicKey) kf.generatePublic(spec);
 
-        // Create JwtDecoder with the RSAPublicKey
         return NimbusJwtDecoder.withPublicKey(publicKey).build();
     }
 }

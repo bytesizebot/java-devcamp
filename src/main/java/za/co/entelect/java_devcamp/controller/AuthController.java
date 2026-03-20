@@ -58,7 +58,7 @@ public class AuthController {
             LogInResponse response = iuserService.logIn(userDto);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth(authServiceUsername,authServicePassword);
+            headers.setBasicAuth(authServiceUsername, authServicePassword);
 
             HttpEntity<Map<String, String>> entity = new HttpEntity<>(
                     Map.of("username", userDto.username()), headers);

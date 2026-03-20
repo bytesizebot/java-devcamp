@@ -5,14 +5,10 @@ import za.co.entelect.java_devcamp.customerdto.AccountTypeDto;
 import za.co.entelect.java_devcamp.customerdto.AccountsDto;
 import za.co.entelect.java_devcamp.customerdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.ProductDto;
-import za.co.entelect.java_devcamp.entity.Product;
-import za.co.entelect.java_devcamp.entity.QualifyingAccounts;
-import za.co.entelect.java_devcamp.entity.QualifyingCustomerTypes;
+import za.co.entelect.java_devcamp.entity.*;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.mapper.ProductMapper;
-import za.co.entelect.java_devcamp.repository.ProductRepository;
-import za.co.entelect.java_devcamp.repository.QualifyingAccountsRepository;
-import za.co.entelect.java_devcamp.repository.QualifyingCustomerTypesRepository;
+import za.co.entelect.java_devcamp.repository.*;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
 
 import java.util.Collections;
@@ -26,13 +22,15 @@ public class ProductService implements IProductService {
     private final ProductRepository productRepository;
     private final QualifyingAccountsRepository qualifyingAccountsRepository;
     private final QualifyingCustomerTypesRepository qualifyingCustomerTypesRepository;
+    private final ProfileRepository profileRepository;
     private final ProductMapper productMapper;
     private final CISWebService cisWebService;
 
-    public ProductService(ProductRepository productRepository, QualifyingAccountsRepository qualifyingAccountsRepository, QualifyingCustomerTypesRepository qualifyingCustomerTypesRepository, ProductMapper productMapper, CISWebService cisWebService) {
+    public ProductService(ProductRepository productRepository, QualifyingAccountsRepository qualifyingAccountsRepository, QualifyingCustomerTypesRepository qualifyingCustomerTypesRepository, ProfileRepository profileRepository, ProductMapper productMapper, CISWebService cisWebService) {
         this.productRepository = productRepository;
         this.qualifyingAccountsRepository = qualifyingAccountsRepository;
         this.qualifyingCustomerTypesRepository = qualifyingCustomerTypesRepository;
+        this.profileRepository = profileRepository;
         this.productMapper = productMapper;
         this.cisWebService = cisWebService;
     }
@@ -57,7 +55,12 @@ public class ProductService implements IProductService {
         CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail);
 
         //using customer, get the customerTypeId && customerAccounts[]
-        Long customerTypeId = Long.valueOf(customer.getCustomerTypeId());
+        //Long customerTypeId = Long.valueOf(customer.getCustomerType().getId());
+        //temporary
+        Profile profile = profileRepository.findByEmailAddress(customerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found with username: " + customerEmail));
+        Long customerTypeId = profile.getCustomerTypeId();
+
         List<AccountsDto> customerAccounts = customer.getCustomerAccounts();
 
         //get customer accounts id

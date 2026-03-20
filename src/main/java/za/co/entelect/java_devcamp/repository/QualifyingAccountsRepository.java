@@ -7,4 +7,5 @@ import za.co.entelect.java_devcamp.entity.QualifyingAccounts;
 @Repository
 public interface QualifyingAccountsRepository extends JpaRepository<QualifyingAccounts, Long> {
     QualifyingAccounts findByAccountIdAndProductProductId(Long accountId, Long productId);
+
 }

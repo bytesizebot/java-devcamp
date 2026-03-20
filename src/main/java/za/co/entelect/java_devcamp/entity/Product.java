@@ -17,10 +17,9 @@ import java.util.List;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
-    private Long ProductId;
+    @Column( nullable = false)
+    private Long productId;
 
-    @Getter
     @Column
     private String Name;
 

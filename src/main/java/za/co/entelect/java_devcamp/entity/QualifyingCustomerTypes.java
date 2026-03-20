@@ -20,6 +20,6 @@ public class QualifyingCustomerTypes {
     private Long customerTypesId;
 
     @ManyToOne
-    @JoinColumn(name = "ProductId")
+    @JoinColumn(name = "product_id")
     private Product product;
 }

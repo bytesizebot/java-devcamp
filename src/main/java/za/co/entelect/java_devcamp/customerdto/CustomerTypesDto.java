@@ -6,15 +6,11 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class CustomerTypesDto {
 
     private Integer Id;
     private String name;
     private String description;
 
-
-    public CustomerTypesDto(String name, String description){
-        this.name = name;
-        this.description = description;
-    }
 }

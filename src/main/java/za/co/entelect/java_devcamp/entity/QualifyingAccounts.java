@@ -20,7 +20,7 @@ public class QualifyingAccounts {
     @Column private Long accountId;
 
     @ManyToOne
-    @JoinColumn(name = "ProductId")
+    @JoinColumn(name = "product_id")
     private Product product;
 
 

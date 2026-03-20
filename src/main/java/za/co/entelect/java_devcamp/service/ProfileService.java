@@ -34,6 +34,7 @@ public class ProfileService implements IProfileService {
     public void createUserProfile(ProfileDto profileDto) {
         logger.info("Creating a new user profile");
         if (!userRepository.existsByUsername(profileDto.username())) {
+            log.info("You need to register as a user first");
             throw new ResourceNotFoundException("User does not exist. Please register first.");
         }
         User user = userRepository.findByUsername(profileDto.username())
