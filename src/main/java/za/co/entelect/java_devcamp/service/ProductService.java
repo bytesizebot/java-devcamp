@@ -1,14 +1,20 @@
 package za.co.entelect.java_devcamp.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import za.co.entelect.java_devcamp.customerdto.AccountTypeDto;
-import za.co.entelect.java_devcamp.customerdto.AccountsDto;
-import za.co.entelect.java_devcamp.customerdto.CustomerDto;
+import za.co.entelect.java_devcamp.webclientdto.AccountTypeDto;
+import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.ProductDto;
-import za.co.entelect.java_devcamp.entity.*;
+import za.co.entelect.java_devcamp.entity.Eligibility;
+import za.co.entelect.java_devcamp.entity.Product;
+import za.co.entelect.java_devcamp.entity.QualifyingAccounts;
+import za.co.entelect.java_devcamp.entity.QualifyingCustomerTypes;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.mapper.ProductMapper;
-import za.co.entelect.java_devcamp.repository.*;
+import za.co.entelect.java_devcamp.repository.EligibilityRepository;
+import za.co.entelect.java_devcamp.repository.ProductRepository;
+import za.co.entelect.java_devcamp.repository.QualifyingAccountsRepository;
+import za.co.entelect.java_devcamp.repository.QualifyingCustomerTypesRepository;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
 
 import java.util.Collections;
@@ -16,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class ProductService implements IProductService {
 
@@ -24,18 +31,7 @@ public class ProductService implements IProductService {
     private final QualifyingCustomerTypesRepository qualifyingCustomerTypesRepository;
     private final ProductMapper productMapper;
     private final CISWebService cisWebService;
-    private final ProfileRepository profileRepository;
     private final EligibilityRepository eligibilityRepository;
-
-    public ProductService(ProductRepository productRepository, QualifyingAccountsRepository qualifyingAccountsRepository, QualifyingCustomerTypesRepository qualifyingCustomerTypesRepository, ProductMapper productMapper, CISWebService cisWebService, ProfileRepository profileRepository, EligibilityRepository eligibilityRepository) {
-        this.productRepository = productRepository;
-        this.qualifyingAccountsRepository = qualifyingAccountsRepository;
-        this.qualifyingCustomerTypesRepository = qualifyingCustomerTypesRepository;
-        this.productMapper = productMapper;
-        this.cisWebService = cisWebService;
-        this.profileRepository = profileRepository;
-        this.eligibilityRepository = eligibilityRepository;
-    }
 
     @Override
     public List<ProductDto> getProducts() {
@@ -54,25 +50,18 @@ public class ProductService implements IProductService {
     public boolean isEligibleForProduct(String customerEmail, Long productId) {
         CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail);
 
-        if(eligibilityRepository.existsByCustomerIdAndProductId(customer.getId(), productId)){
+        if (eligibilityRepository.existsByCustomerIdAndProductId(customer.getId(), productId)) {
             return eligibilityRepository.findByCustomerIdAndProductId(customer.getId(), productId).getResult();
         }
-        //check token n user at the same time
-        String customerType = customer.getCustomerType().getName();
+        //To do: check token n user at the same time
 
-        Profile profile = profileRepository.findByEmailAddress(customerEmail)
-               .orElseThrow(() -> new ResourceNotFoundException("Profile not found with username: " + customerEmail));
-        Long customerTypeId = profile.getCustomerTypeId();
+        Long customerTypeId = customer.getCustomerType().getId().longValue();
 
-        List<AccountsDto> customerAccounts = customer.getCustomerAccounts();
+        List<AccountTypeDto> customerAccounts = customer.getCustomerAccounts();
 
         List<Integer> accountIds = Optional.ofNullable(customerAccounts)
                 .orElse(Collections.emptyList())
                 .stream()
-                .filter(Objects::nonNull)
-                .map(AccountsDto::getAccountType)
-                .filter(Objects::nonNull)
-                .flatMap(List::stream)
                 .filter(Objects::nonNull)
                 .map(AccountTypeDto::getId)
                 .filter(Objects::nonNull)
@@ -92,7 +81,7 @@ public class ProductService implements IProductService {
         QualifyingCustomerTypes qualifyingCustomerTypes = qualifyingCustomerTypesRepository.findByCustomerTypesIdAndProductProductId(customerTypeId, productId);
         boolean isEligible = ((qualifyingCustomerTypes != null) && (hasAQualifyingAccount));
 
-        Eligibility eligible = new Eligibility(productId,profile.getProfileId(), isEligible);
+        Eligibility eligible = new Eligibility(productId, customer.getId(), isEligible);
 
         eligibilityRepository.save(eligible);
         return isEligible;

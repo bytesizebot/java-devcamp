@@ -8,10 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import za.co.entelect.java_devcamp.customerdto.CustomerDto;
+import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.ProfileDto;
-
-import static org.springframework.web.reactive.function.client.ExchangeFilterFunctions.basicAuthentication;
 
 @Slf4j
 @Service

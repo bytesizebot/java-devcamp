@@ -3,15 +3,13 @@ package za.co.entelect.java_devcamp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "Profile", schema = "public")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

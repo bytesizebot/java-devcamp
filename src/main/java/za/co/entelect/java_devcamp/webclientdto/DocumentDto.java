@@ -1,4 +1,4 @@
-package za.co.entelect.java_devcamp.customerdto;
+package za.co.entelect.java_devcamp.webclientdto;
 import lombok.*;
 
 @Getter

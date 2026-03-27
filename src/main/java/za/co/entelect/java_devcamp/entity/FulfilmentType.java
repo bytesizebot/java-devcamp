@@ -1,15 +1,14 @@
 package za.co.entelect.java_devcamp.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "FulfilmentType", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
+
 public class FulfilmentType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,5 +25,9 @@ public class FulfilmentType {
     @JoinColumn(name = "productId", referencedColumnName = "ProductId")
     private Product product;
 
-
+    public FulfilmentType(String name, String description, Product product) {
+        Name = name;
+        Description = description;
+        this.product = product;
+    }
 }

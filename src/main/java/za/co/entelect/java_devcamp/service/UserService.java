@@ -1,5 +1,6 @@
 package za.co.entelect.java_devcamp.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +18,9 @@ import za.co.entelect.java_devcamp.mapper.UserMapper;
 import za.co.entelect.java_devcamp.repository.UserRepository;
 import za.co.entelect.java_devcamp.request.LogInRequest;
 import za.co.entelect.java_devcamp.response.LogInResponse;
-
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class UserService implements IUserService{
@@ -30,11 +31,6 @@ public class UserService implements IUserService{
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     @Override
     public void createUser(UserDto userDto) {

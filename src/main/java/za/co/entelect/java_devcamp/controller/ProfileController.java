@@ -26,10 +26,10 @@ public class ProfileController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ProfileDto> createUserProfile(@RequestBody ProfileDto profileDto) {
+    public ResponseEntity<?> createUserProfile(@RequestBody ProfileDto profileDto) {
         iProfileService.createUserProfile(profileDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileDto);
+                .body("Successfully created user profile for: " + profileDto.username());
     }
 
     @GetMapping("/{username}")

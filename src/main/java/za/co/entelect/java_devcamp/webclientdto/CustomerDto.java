@@ -1,4 +1,4 @@
-package za.co.entelect.java_devcamp.customerdto;
+package za.co.entelect.java_devcamp.webclientdto;
 
 import lombok.*;
 import java.util.List;
@@ -9,13 +9,13 @@ import java.util.List;
 @NoArgsConstructor
 public class CustomerDto {
 
-    private Long Id;
+    private Long id;
     private String username;
     private String firstName;
     private String lastName;
     private String idNumber;
     private Integer customerTypeId;
     private CustomerTypesDto customerType;
-    private List<AccountsDto> customerAccounts;
+    private List<AccountTypeDto> customerAccounts;
 
 }

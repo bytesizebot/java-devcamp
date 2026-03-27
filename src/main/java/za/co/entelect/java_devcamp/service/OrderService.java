@@ -1,34 +1,32 @@
 package za.co.entelect.java_devcamp.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.OrderDto;
 import za.co.entelect.java_devcamp.entity.*;
 import za.co.entelect.java_devcamp.exception.ProductTakeupFailedException;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.mapper.OrderMapper;
+import za.co.entelect.java_devcamp.rabbitmq.MessageProducer;
 import za.co.entelect.java_devcamp.repository.OrderRepository;
+import za.co.entelect.java_devcamp.webclient.CISWebService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Slf4j
 @Service
 public class OrderService implements IOrderService {
 
     private final OrderRepository orderRepository;
-    private final IProfileService iProfileService;
     private final IProductService iProductService;
     private final IEligibilityService iEligibilityService;
     private final OrderMapper orderMapper;
-
-    public OrderService(OrderRepository orderRepository, IProfileService iProfileService, IProductService iProductService, IEligibilityService iEligibilityService, OrderMapper orderMapper) {
-        this.orderRepository = orderRepository;
-        this.iProfileService = iProfileService;
-        this.iProductService = iProductService;
-        this.iEligibilityService = iEligibilityService;
-        this.orderMapper = orderMapper;
-    }
+    private final MessageProducer messageProducer;
+    private final CISWebService cisWebService;
 
     @Override
     public List<OrderDto> getOrders() {
@@ -48,16 +46,19 @@ public class OrderService implements IOrderService {
         log.info("Creating order because the customer is eligible for a product");
 
         Product product = iProductService.getProductById(productId);
-        Profile customerProfile = iProfileService.getProfileByUserName(customerEmail);
-        Eligibility eligibility = iEligibilityService.getEligibilityByProductIdAndCustomerId(customerProfile.getProfileId(), productId);
+        CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail);
+
+        Eligibility eligibility = iEligibilityService.getEligibilityByProductIdAndCustomerId(customer.getId(), productId);
+
         if (!eligibility.getResult()) {
             throw new ProductTakeupFailedException("Customer cannot take up product. Ensure customer is eligible first.");
         } else {
-            if (customerProfile == null) {
+            if (customer == null) {
                 throw new ResourceNotFoundException("Customer profile not found");
             }
             Order productOrder = new Order();
-            productOrder.setCustomerId(customerProfile.getProfileId());
+
+            productOrder.setCustomerId(customer.getId());
             productOrder.setCreatedAt(LocalDateTime.now());
             productOrder.setOrderStatus(Status.PENDING);
 
@@ -67,6 +68,7 @@ public class OrderService implements IOrderService {
             productOrder.addProducts(item);
 
             orderRepository.save(productOrder);
+            messageProducer.sendMessage("A new product needs fulfilment for customer: " + customerEmail);
             return productOrder;
         }
     }

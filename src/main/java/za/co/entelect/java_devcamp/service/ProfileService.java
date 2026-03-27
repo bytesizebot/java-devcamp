@@ -1,5 +1,6 @@
 package za.co.entelect.java_devcamp.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,19 +17,13 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProfileService implements IProfileService {
 
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
     private static Logger logger = LoggerFactory.getLogger(UserService.class);
-
-    public ProfileService(ProfileRepository profileRepository, UserRepository userRepository, ProfileMapper profileMapper) {
-        this.profileRepository = profileRepository;
-        this.userRepository = userRepository;
-        this.profileMapper = profileMapper;
-    }
-
 
     @Override
     public void createUserProfile(ProfileDto profileDto) {
