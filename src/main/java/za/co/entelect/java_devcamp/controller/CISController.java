@@ -3,29 +3,34 @@ package za.co.entelect.java_devcamp.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import za.co.entelect.java_devcamp.dto.ProfileDto;
-import za.co.entelect.java_devcamp.service.ICISService;
+import za.co.entelect.java_devcamp.service.IWebService;
+import za.co.entelect.java_devcamp.webclientdto.KYCCheckDto;
 
 @RestController
-@RequestMapping("cis")
-@Tag(name = "Customer Information Store", description = "endpoint to communicate with CIS")
+@RequestMapping("web-client")
+@Tag(name = "Web Client", description = "endpoint to communicate with CIS")
 public class CISController {
 
-    private final ICISService icisService;
+    private final IWebService IWebService;
 
-    public CISController(ICISService icisService) {
-        this.icisService = icisService;
+    public CISController(IWebService IWebService) {
+        this.IWebService = IWebService;
     }
 
-    @PostMapping("/register-profile")
+    @PostMapping("/cis/register-profile")
     public ResponseEntity<ProfileDto> registerUserProfile(@RequestBody ProfileDto profileDto){
-        icisService.createCISCustomer(profileDto);
+        IWebService.createCISCustomer(profileDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileDto);
+    }
+
+    @GetMapping("/kyc/{customerId}")
+    public ResponseEntity<KYCCheckDto> getKYCCheck(@PathVariable String customerId){
+        KYCCheckDto kycCheckDto = IWebService.getCustomerKYC(customerId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(kycCheckDto);
     }
 
 }

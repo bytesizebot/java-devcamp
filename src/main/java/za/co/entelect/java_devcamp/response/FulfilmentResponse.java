@@ -7,8 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class EligibilityResponse {
-    private boolean success;
-    private String message;
-
+public class FulfilmentResponse {
+    private Long orderId;
+    private String correlationId;
+    private String customerId;
+    private boolean successful;
 }

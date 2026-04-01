@@ -2,16 +2,21 @@ package za.co.entelect.java_devcamp.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.OrderDto;
+import za.co.entelect.java_devcamp.dto.OrderItemDto;
+import za.co.entelect.java_devcamp.dto.ProductDto;
 import za.co.entelect.java_devcamp.entity.*;
 import za.co.entelect.java_devcamp.exception.ProductTakeupFailedException;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.mapper.OrderMapper;
 import za.co.entelect.java_devcamp.rabbitmq.MessageProducer;
 import za.co.entelect.java_devcamp.repository.OrderRepository;
+import za.co.entelect.java_devcamp.response.FulfilmentResponse;
+import za.co.entelect.java_devcamp.util.ActionCompletedFulfilmentChecks;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
+import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +32,8 @@ public class OrderService implements IOrderService {
     private final OrderMapper orderMapper;
     private final MessageProducer messageProducer;
     private final CISWebService cisWebService;
+    private final IFulfilmentService iFulfilmentService;
+    private final IDocumentService iDocumentService;
 
     @Override
     public List<OrderDto> getOrders() {
@@ -67,7 +74,9 @@ public class OrderService implements IOrderService {
 
             productOrder.addProducts(item);
 
-            orderRepository.save(productOrder);
+           // orderRepository.save(productOrder);
+            
+            iFulfilmentService.determineFulfillmentCheck(productOrder, customer.getIdNumber());
             messageProducer.sendMessage("A new product needs fulfilment for customer: " + customerEmail);
             return productOrder;
         }
@@ -78,5 +87,33 @@ public class OrderService implements IOrderService {
         Order order = orderMapper.toOrderEntity(getOrderById(orderId));
         order.setOrderStatus(newStatus);
         return orderRepository.save(order);
+    }
+
+    @EventListener
+    public void handleCompletedFulfilmentCheck(ActionCompletedFulfilmentChecks actionCompletedFulfilmentChecks){
+        completeOrder(actionCompletedFulfilmentChecks.getResponse());
+    }
+    @Override
+    public void completeOrder(FulfilmentResponse fulfillmentResponse) {
+        log.info("Completing order for orderId: {}", fulfillmentResponse.getOrderId());
+        if(fulfillmentResponse.isSuccessful()){
+            updateOrderStatus(fulfillmentResponse.getOrderId(), Status.APPROVED);
+            log.info("Order for customer with ID: {} has been approved! Yay.",fulfillmentResponse.getCustomerId());
+
+            //Generate contract Url call document service
+            Long orderId = fulfillmentResponse.getOrderId();
+
+            OrderDto customerOrder = getOrderById(orderId);
+            CustomerDto customerProfile = cisWebService.getCustomerById(customerOrder.customerId());
+            List<OrderItemDto> orderItems = getOrderById(orderId).orderItemsDto();
+            List<ProductDto> products = orderItems.stream()
+                    .map(OrderItemDto::product)
+                    .toList();
+
+            iDocumentService.generateCustomerContract(products, customerProfile);
+        }
+
+        updateOrderStatus(fulfillmentResponse.getOrderId(), Status.DECLINED);
+        log.info("Order for customer with ID: {} has been declined. Order request unsuccessful.",fulfillmentResponse.getCustomerId());
     }
 }

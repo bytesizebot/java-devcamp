@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import za.co.entelect.java_devcamp.dto.OrderDto;
 import za.co.entelect.java_devcamp.dto.OrderItemDto;
+import za.co.entelect.java_devcamp.dto.ProductDto;
 import za.co.entelect.java_devcamp.entity.Order;
 import za.co.entelect.java_devcamp.entity.OrderItem;
 import za.co.entelect.java_devcamp.entity.Product;
@@ -46,16 +47,20 @@ class OrderServiceTest {
     private IProductService iProductService;
     @Mock
     private IEligibilityService iEligibilityService;
-
+    @Mock
+    private IFulfilmentService iFulfilmentService;
+    @Mock
+    private IDocumentService iDocumentService;
     private Order mockOrderEntity;
     private OrderDto mockOrderDto;
     private OrderItem mockOrderItemsEntity;
     private OrderItemDto mockOrderItemDto;
     private Product mockProductEntity;
 
+
     @BeforeEach
     public void setup() {
-        orderService = new OrderService(orderRepository, iProductService, iEligibilityService, orderMapper, messageProducer, cisWebService);
+        orderService = new OrderService(orderRepository, iProductService, iEligibilityService, orderMapper, messageProducer, cisWebService, iFulfilmentService, iDocumentService);
         mockProductEntity = Product.builder()
                 .productId(1L)
                 .Name("Product")
@@ -80,7 +85,7 @@ class OrderServiceTest {
                 .orderItems(List.of(mockOrderItemsEntity))
                 .build();
 
-        mockOrderItemDto = new OrderItemDto(1L, "Product", " Description of the first product");
+        mockOrderItemDto = new OrderItemDto(new ProductDto( "Product", " Description of the first product", 5000.00F, "http://url8490"));
 
         mockOrderDto = new OrderDto(8L, LocalDateTime.now(), Status.PENDING, "", List.of(mockOrderItemDto));
 

@@ -1,14 +1,25 @@
 package za.co.entelect.java_devcamp.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import za.co.entelect.java_devcamp.rabbitmq.MessageProducer;
+import za.co.entelect.java_devcamp.service.IFulfilmentService;
+import za.co.entelect.java_devcamp.webclientdto.KYCCheckDto;
 
 @RestController
+@RequestMapping("fulfilment-checks")
+@Tag(name = "Fulfillment Checks", description = "Fulfilment checks management API")
 public class FulfilmentController {
 
     @Autowired
     private MessageProducer messageProducer;
+
+    private final IFulfilmentService iFulfilmentService;
+
+    public FulfilmentController(IFulfilmentService iFulfilmentService) {
+        this.iFulfilmentService = iFulfilmentService;
+    }
 
     @GetMapping("/send")
     public String sendMessage(@RequestParam String message){
@@ -21,4 +32,6 @@ public class FulfilmentController {
         messageProducer.sendTestMessage(message);
         return "Sent test message directly to queue: " + message;
     }
+
+
 }

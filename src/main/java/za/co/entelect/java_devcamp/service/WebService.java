@@ -1,19 +1,22 @@
 package za.co.entelect.java_devcamp.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import za.co.entelect.java_devcamp.dto.ProfileDto;
 import za.co.entelect.java_devcamp.exception.DuplicateResourceException;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
+import za.co.entelect.java_devcamp.webclient.KYCWebService;
+import za.co.entelect.java_devcamp.webclientdto.KYCCheckDto;
 
 @Slf4j
+@AllArgsConstructor
 @Service
-public class CISService implements ICISService {
-    private final CISWebService cisWebService;
+public class WebService implements IWebService {
 
-    public CISService(CISWebService cisWebService) {
-        this.cisWebService = cisWebService;
-    }
+    private final CISWebService cisWebService;
+    private final KYCWebService kycWebService;
+
 
     @Override
     public ProfileDto createCISCustomer(ProfileDto profileDto) {
@@ -23,5 +26,11 @@ public class CISService implements ICISService {
             throw new DuplicateResourceException("User already exists. You cannot register them");
         }
         return cisWebService.registerCustomer(profileDto);
+    }
+
+    @Override
+    public KYCCheckDto getCustomerKYC(String customerId) {
+
+        return kycWebService.getCustomerKYC(customerId);
     }
 }

@@ -2,8 +2,6 @@ package za.co.entelect.java_devcamp.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import za.co.entelect.java_devcamp.webclientdto.AccountTypeDto;
-import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 import za.co.entelect.java_devcamp.dto.ProductDto;
 import za.co.entelect.java_devcamp.entity.Eligibility;
 import za.co.entelect.java_devcamp.entity.Product;
@@ -16,6 +14,8 @@ import za.co.entelect.java_devcamp.repository.ProductRepository;
 import za.co.entelect.java_devcamp.repository.QualifyingAccountsRepository;
 import za.co.entelect.java_devcamp.repository.QualifyingCustomerTypesRepository;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
+import za.co.entelect.java_devcamp.webclientdto.AccountTypeDto;
+import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 
 import java.util.Collections;
 import java.util.List;

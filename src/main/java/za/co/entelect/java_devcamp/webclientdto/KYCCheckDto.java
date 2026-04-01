@@ -1,6 +1,7 @@
 package za.co.entelect.java_devcamp.webclientdto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

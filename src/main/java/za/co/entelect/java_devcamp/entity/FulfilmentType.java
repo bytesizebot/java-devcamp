@@ -1,7 +1,9 @@
 package za.co.entelect.java_devcamp.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "FulfilmentType", schema = "public")

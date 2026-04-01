@@ -1,21 +1,43 @@
 package za.co.entelect.java_devcamp.configs;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableRabbit
 public class RabbitConfig {
 
     public static final String QUEUE_NAME = "ProductFulfilment";
+
+    //rabbit queues
+    public static final String KYC_QUEUE = "kycCheckQueue";
+    public static final String DHA_QUEUE = "dhaCheckQueue";
+    public static final String CC_QUEUE = "creditCheckQueue";
     public static final String EXCHANGE_NAME = "FulfilmentExchange";
 
     //Queues
-
     @Bean
     public Queue queue() {
         return new Queue(QUEUE_NAME, true);
+    }
+
+    @Bean
+    public Queue kycQueue() {
+        return new Queue(KYC_QUEUE, true);
+    }
+
+    @Bean
+    public Queue dhaQueue() {
+        return new Queue(DHA_QUEUE, true);
+    }
+
+    @Bean
+    public Queue ccQueue() {
+        return new Queue(CC_QUEUE, true);
     }
 
     @Bean
@@ -35,5 +57,10 @@ public class RabbitConfig {
                 .withArgument("x-dead-letter-routing-key", "my-queue")
                 .withArgument("x-message-ttl", 5000) // 5000 ms = 5 seconds
                 .build();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }

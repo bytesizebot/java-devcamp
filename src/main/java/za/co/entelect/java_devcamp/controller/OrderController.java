@@ -7,9 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import za.co.entelect.java_devcamp.dto.OrderDto;
 import za.co.entelect.java_devcamp.entity.Order;
-import za.co.entelect.java_devcamp.request.UpdateOrderRequest;
 import za.co.entelect.java_devcamp.mapper.OrderMapper;
 import za.co.entelect.java_devcamp.request.OrderRequest;
+import za.co.entelect.java_devcamp.request.UpdateOrderRequest;
 import za.co.entelect.java_devcamp.service.IOrderService;
 
 import java.util.List;

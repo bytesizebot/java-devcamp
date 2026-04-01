@@ -1,39 +1,27 @@
 package za.co.entelect.java_devcamp.mapper;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import za.co.entelect.java_devcamp.dto.OrderDto;
 import za.co.entelect.java_devcamp.dto.OrderItemDto;
 import za.co.entelect.java_devcamp.entity.Order;
 import za.co.entelect.java_devcamp.entity.OrderItem;
-import za.co.entelect.java_devcamp.entity.Product;
-import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
-import za.co.entelect.java_devcamp.repository.ProductRepository;
 
+@AllArgsConstructor
 @Component
 public class OrderMapper {
 
-    private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
-    public OrderMapper(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
 
     public OrderItemDto toOrderItemDto(OrderItem orderItem){
         return new OrderItemDto(
-                orderItem.getProduct().getProductId(),
-                orderItem.getProduct().getName(),
-                orderItem.getProduct().getDescription()
-        );
+              productMapper.toDto(orderItem.getProduct()));
     }
 
     public OrderItem toOrderItemEntity(OrderItemDto orderItemDto){
-        Product product = productRepository.findById(orderItemDto.productId())
-                .orElseThrow(() -> new ResourceNotFoundException(("Product not found with id: ") + orderItemDto.productId()));
-
-        OrderItem orderItem = new OrderItem();
-        orderItem.setProduct(product);
-
-        return orderItem;
+        return new OrderItem(
+                productMapper.toEntity(orderItemDto.product()));
     }
     public OrderDto toOrderDto(Order order){
         return new OrderDto(
