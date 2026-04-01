@@ -53,7 +53,7 @@ public class MessageConsumer {
         }
     }
 
-    @RabbitListener(queues = RabbitConfig.KYC_QUEUE, ackMode = "A")
+    @RabbitListener(queues = RabbitConfig.KYC_QUEUE, ackMode = "MANUAL")
     public void listenToKYCQueue(String message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         try {
             FulfillmentRequest request = objectMapper.readValue(message, FulfillmentRequest.class);
