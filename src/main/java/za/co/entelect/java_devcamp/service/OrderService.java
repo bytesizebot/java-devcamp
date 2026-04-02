@@ -74,9 +74,9 @@ public class OrderService implements IOrderService {
 
             productOrder.addProducts(item);
 
-           // orderRepository.save(productOrder);
+            orderRepository.save(productOrder);
 
-            iFulfilmentService.determineFulfillmentCheck(productOrder, customer.getId());
+            iFulfilmentService.determineFulfillmentCheck(productOrder, customer.getId(), customer.getIdNumber());
             messageProducer.sendMessage("A new product needs fulfilment for customer: " + customerEmail);
             return productOrder;
         }

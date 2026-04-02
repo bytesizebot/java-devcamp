@@ -13,6 +13,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class FulfillmentRequest implements Serializable {
     private Long customerId;
+    private String customerIdNumber;
+    private String fulfillmentType;
     private Long orderId;
     private String correlationId;
 }

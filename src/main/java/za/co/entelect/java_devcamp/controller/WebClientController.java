@@ -1,17 +1,21 @@
 package za.co.entelect.java_devcamp.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.openapitools.api.DhaApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import za.co.entelect.java_devcamp.dto.ProfileDto;
 import za.co.entelect.java_devcamp.service.IWebService;
+import za.co.entelect.java_devcamp.webclientdto.DuplicateIdCheckDto;
 import za.co.entelect.java_devcamp.webclientdto.KYCCheckDto;
+import za.co.entelect.java_devcamp.webclientdto.LivingStatusCheckDto;
+import za.co.entelect.java_devcamp.webclientdto.MaritalStatusCheckDto;
 
 @RestController
 @RequestMapping("web-client")
 @Tag(name = "Web Client", description = "endpoint to communicate with CIS")
-public class WebClientController {
+public class WebClientController implements DhaApi {
 
     private final IWebService IWebService;
 
@@ -33,4 +37,24 @@ public class WebClientController {
                 .body(kycCheckDto);
     }
 
+    @GetMapping("dha/marital/{customerIdNumber}")
+    public ResponseEntity<MaritalStatusCheckDto> getDHAMaritalStatus(@PathVariable String customerIdNumber){
+        MaritalStatusCheckDto maritalStatusCheck = IWebService.getCustomerMaritalStatus(customerIdNumber);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(maritalStatusCheck);
+    }
+
+    @GetMapping("dha/living/{customerIdNumber}")
+    public ResponseEntity<LivingStatusCheckDto> getDHALivingStatus(@PathVariable String customerIdNumber){
+        LivingStatusCheckDto livingStatusCheckDto = IWebService.getCustomerLivingStatus(customerIdNumber);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(livingStatusCheckDto);
+    }
+
+    @GetMapping("dha/duplicateId/{customerIdNumber}")
+    public ResponseEntity<DuplicateIdCheckDto> getDHADuplicateIDStatus(@PathVariable String customerIdNumber){
+        DuplicateIdCheckDto duplicateIdCheckDto = IWebService.getCustomerDuplicateIDStatus(customerIdNumber);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(duplicateIdCheckDto);
+    }
 }

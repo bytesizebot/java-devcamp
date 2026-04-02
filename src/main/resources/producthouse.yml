@@ -2,13 +2,15 @@ openapi: 3.0.0
 info:
   title: DHA Fulfilment Checks
   version: 1.0.0
+servers:
+  - url: http://localhost:7070
 paths:
-  /check/status/marital/{idNumber}:
+  /dha/check/marital/{idNumber}:
     get:
       summary: "Determine the Marital Status of a citizen given that citizens ID Number"
       operationId: "getMaritalStatusById"
       tags:
-        - "dha"
+        - "Fulfilment"
       parameters:
         - name: "idNumber"
           in: "path"
@@ -35,12 +37,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /check/check/status/duplicateId/{idNumber}:
+  /dha/check/duplicateId/{idNumber}:
     get:
       summary: "Determine if the citizen has a duplicate ID document issued"
       operationId: "getDuplicateIdDocumentStatusById"
       tags:
-        - "dha"
+        - "Fulfilment"
       parameters:
         - name: "idNumber"
           in: "path"
@@ -67,12 +69,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /check/status/living/{idNumber}:
+  /dha/check/living/{idNumber}:
     get:
       summary: "Determine if the citizen is alive or deceased"
       operationId: "getLivingStatusById"
       tags:
-        - "dha"
+        - "Fulfilment"
       parameters:
         - name: "idNumber"
           in: "path"
@@ -178,4 +180,4 @@ components:
           type: "string"
           format: "date"
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]

@@ -58,7 +58,10 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -118,11 +121,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter</artifactId>
-				<scope>test</scope>
-			</dependency>
 <!--		Security-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -154,10 +152,6 @@
 			<version>3.3.4</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-engine</artifactId>
-		</dependency>
 		<!--		Other modules -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -172,7 +166,7 @@
 		<dependency>
 			<groupId>org.springframework.retry</groupId>
 			<artifactId>spring-retry</artifactId>
-			<version>2.0.3</version> <!-- or latest compatible version -->
+			<version>2.0.3</version>
 		</dependency>
 
 		<dependency>
@@ -182,12 +176,19 @@
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
+<!--			Open API -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-web</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.data</groupId>
+					<artifactId>spring-data-jpa</artifactId>
+				</dependency>
 			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>5.10.2</version> <!-- or latest -->
-				<type>pom</type>
-				<scope>import</scope>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-ui</artifactId>
+				<version>1.8.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -198,6 +199,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<mainClass>za.co.entelect.java_devcamp.JavaDevcampApplication</mainClass>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
@@ -220,9 +222,10 @@
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>7.16.0</version>
+				<version>7.21.0</version>
 				<executions>
 					<execution>
+						<id>generate-api</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
@@ -231,14 +234,16 @@
 								${project.basedir}/src/main/resources/producthouse.yml
 							</inputSpec>
 							<generatorName>spring</generatorName>
-							<apiPackage>com.baeldung.openapi.api</apiPackage>
-							<modelPackage>com.baeldung.openapi.model</modelPackage>
-							<supportingFilesToGenerate>
-								ApiUtil.java
-							</supportingFilesToGenerate>
 							<configOptions>
+								<useBeanValidation>true</useBeanValidation>
+								<interfaceOnly>true</interfaceOnly>
+								<useJakartaEe>true</useJakartaEe>
+								<useSpringBoot3>true</useSpringBoot3>
 								<delegatePattern>true</delegatePattern>
+								<openApiNullable>false</openApiNullable>
 							</configOptions>
+							<packageName>za.co.entelect.java_devcamp.client</packageName>
+							<output>${project.build.directory}/generated-sources/client</output>
 						</configuration>
 					</execution>
 				</executions>

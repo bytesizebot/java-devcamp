@@ -10,10 +10,8 @@ import za.co.entelect.java_devcamp.entity.Eligibility;
 import za.co.entelect.java_devcamp.repository.EligibilityRepository;
 import za.co.entelect.java_devcamp.service.EligibilityService;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

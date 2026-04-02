@@ -1,7 +1,6 @@
 package za.co.entelect.java_devcamp.webclient;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,7 +12,6 @@ import reactor.core.publisher.Mono;
 import za.co.entelect.java_devcamp.configs.TokenStore;
 import za.co.entelect.java_devcamp.webclientdto.DuplicateIdCheckDto;
 import za.co.entelect.java_devcamp.webclientdto.LivingStatusCheckDto;
-import za.co.entelect.java_devcamp.webclientdto.MaritalStatus;
 import za.co.entelect.java_devcamp.webclientdto.MaritalStatusCheckDto;
 
 @Slf4j
@@ -97,6 +95,49 @@ public class DHAWebService {
                                             })
                     )
                     .bodyToMono(LivingStatusCheckDto.class)
+                    .onErrorResume(WebClientResponseException.class, ex -> {
+
+                        if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            return Mono.empty();
+                        }
+
+                        if (ex.getStatusCode().is5xxServerError()) {
+                            log.error("Server error: {}", ex.getResponseBodyAsString());
+                            return Mono.empty();
+                        }
+                        return Mono.error(ex);
+                    })
+                    .block();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.toString());
+            throw e;
+        }
+    }
+
+    public MaritalStatusCheckDto getMaritalStatus(String customerId) {
+        log.info("Getting customer living status information");
+        try {
+            return dhaClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/status/living/{idNumber}")
+                            .build(customerId))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenStore.getToken())
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError(),
+                            response -> response.createException()
+                    )
+                    .onStatus(
+                            status -> status.is5xxServerError(),
+                            response ->
+                                    response.bodyToMono(String.class)
+                                            .flatMap(body -> {
+                                                log.error("5xx error: {}", body);
+                                                return response.createException();
+                                            })
+                    )
+                    .bodyToMono(MaritalStatusCheckDto.class)
                     .onErrorResume(WebClientResponseException.class, ex -> {
 
                         if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {

@@ -2,9 +2,6 @@ package za.co.entelect.java_devcamp.controller;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +15,6 @@ import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.request.LogInRequest;
 import za.co.entelect.java_devcamp.response.LogInResponse;
 import za.co.entelect.java_devcamp.service.IUserService;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("auth")
