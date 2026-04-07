@@ -14,7 +14,7 @@ public class MessageProducer {
     }
 
     public void sendMessage(String message) {
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME, "routing.key", message);
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME, RabbitConfig.ROUTING_KEY, message);
         try {
             Thread.sleep(5000); // 5-second pause
         } catch (InterruptedException e) {

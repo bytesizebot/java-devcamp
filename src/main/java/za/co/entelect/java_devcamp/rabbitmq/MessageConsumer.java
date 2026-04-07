@@ -19,7 +19,10 @@ import za.co.entelect.java_devcamp.service.IFulfilmentService;
 import za.co.entelect.java_devcamp.util.MaskingUtils;
 import za.co.entelect.java_devcamp.webclient.DHAWebService;
 import za.co.entelect.java_devcamp.webclient.KYCWebService;
-import za.co.entelect.java_devcamp.webclientdto.*;
+import za.co.entelect.java_devcamp.webclientdto.DuplicateIdCheckDto;
+import za.co.entelect.java_devcamp.webclientdto.KYCCheckDto;
+import za.co.entelect.java_devcamp.webclientdto.LivingStatusCheckDto;
+import za.co.entelect.java_devcamp.webclientdto.MaritalStatusCheckDto;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -273,8 +276,6 @@ public class MessageConsumer {
                 FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), false);
                 iFulfilmentService.processMaritalStatusCheck(maritalStatusResponse, fulfilmentResponse);
             }
-
-
         } catch (Exception e) {
             log.error("Failed to process message after retries", e);
             try {

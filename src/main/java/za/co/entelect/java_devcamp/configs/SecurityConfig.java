@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/token",
+                                "/web-client/creditCheck/**",
                                 "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
