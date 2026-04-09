@@ -11,11 +11,13 @@ import za.co.entelect.java_devcamp.entity.*;
 import za.co.entelect.java_devcamp.exception.ProductTakeupFailedException;
 import za.co.entelect.java_devcamp.exception.ResourceNotFoundException;
 import za.co.entelect.java_devcamp.mapper.OrderMapper;
+import za.co.entelect.java_devcamp.model.Notification;
 import za.co.entelect.java_devcamp.rabbitmq.MessageProducer;
 import za.co.entelect.java_devcamp.repository.OrderRepository;
 import za.co.entelect.java_devcamp.response.FulfilmentResponse;
 import za.co.entelect.java_devcamp.serviceinterface.*;
 import za.co.entelect.java_devcamp.util.ActionCompletedFulfilmentChecks;
+import za.co.entelect.java_devcamp.util.NotificationContent;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
 import za.co.entelect.java_devcamp.webclientdto.CustomerDto;
 
@@ -35,6 +37,7 @@ public class OrderService implements IOrderService {
     private final CISWebService cisWebService;
     private final IFulfilmentService iFulfilmentService;
     private final IDocumentService iDocumentService;
+    private final INotificationService iNotificationService;
 
     @Override
     public List<OrderDto> getOrders() {
@@ -99,24 +102,39 @@ public class OrderService implements IOrderService {
     @Override
     public void completeOrder(FulfilmentResponse fulfillmentResponse) {
         log.info("Completing order for orderId: {}", fulfillmentResponse.getOrderId());
+        Long orderId = fulfillmentResponse.getOrderId();
+
+        OrderDto customerOrder = getOrderById(orderId);
+        CustomerDto customerProfile = cisWebService.getCustomerById(customerOrder.customerId());
+        List<OrderItemDto> orderItems = getOrderById(orderId).orderItemsDto();
+        List<ProductDto> products = orderItems.stream()
+                .map(OrderItemDto::product)
+                .toList();
+
         if(fulfillmentResponse.isSuccessful()){
             updateOrderStatus(fulfillmentResponse.getOrderId(), Status.APPROVED);
             log.info("Order for customer with ID: {} has been approved! Yay.",fulfillmentResponse.getCustomerId());
 
             //Generate contract Url call document service
-            Long orderId = fulfillmentResponse.getOrderId();
 
-            OrderDto customerOrder = getOrderById(orderId);
-            CustomerDto customerProfile = cisWebService.getCustomerById(customerOrder.customerId());
-            List<OrderItemDto> orderItems = getOrderById(orderId).orderItemsDto();
-            List<ProductDto> products = orderItems.stream()
-                    .map(OrderItemDto::product)
-                    .toList();
+            Notification notification = new Notification();
+            notification.setNotificationContent(NotificationContent.Order_completed_success);
+            notification.setRecipient(customerProfile.getUsername());
+            String subject = "Successful Order for OrderID " + orderId.toString();
+            notification.setSubject(subject);
+            iNotificationService.sendNotification(notification);
 
             iDocumentService.generateCustomerContract(products, customerProfile);
         }
 
         updateOrderStatus(fulfillmentResponse.getOrderId(), Status.DECLINED);
+
         log.info("Order for customer with ID: {} has been declined. Order request unsuccessful.",fulfillmentResponse.getCustomerId());
+        Notification notification = new Notification();
+        notification.setRecipient(customerProfile.getUsername());
+        String subject = "Unsuccessful Order for OrderID " + orderId.toString();
+        notification.setSubject(subject);
+        notification.setNotificationContent(NotificationContent.Fulfillment_checks_failed);
+        iNotificationService.sendNotification(notification);
     }
 }

@@ -11,5 +11,6 @@ public class FulfilmentResponse {
     private Long orderId;
     private String correlationId;
     private Long customerId;
+    private String fulfillmentType;
     private boolean successful;
 }

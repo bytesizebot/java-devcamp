@@ -18,10 +18,7 @@ import za.co.entelect.java_devcamp.mapper.OrderMapper;
 import za.co.entelect.java_devcamp.rabbitmq.MessageProducer;
 import za.co.entelect.java_devcamp.repository.OrderRepository;
 import za.co.entelect.java_devcamp.service.OrderService;
-import za.co.entelect.java_devcamp.serviceinterface.IDocumentService;
-import za.co.entelect.java_devcamp.serviceinterface.IEligibilityService;
-import za.co.entelect.java_devcamp.serviceinterface.IFulfilmentService;
-import za.co.entelect.java_devcamp.serviceinterface.IProductService;
+import za.co.entelect.java_devcamp.serviceinterface.*;
 import za.co.entelect.java_devcamp.webclient.CISWebService;
 
 import java.time.LocalDateTime;
@@ -56,6 +53,8 @@ class OrderServiceTest {
     private IFulfilmentService iFulfilmentService;
     @Mock
     private IDocumentService iDocumentService;
+    @Mock
+    private INotificationService iNotificationService;
     private Order mockOrderEntity;
     private OrderDto mockOrderDto;
     private OrderItem mockOrderItemsEntity;
@@ -65,7 +64,7 @@ class OrderServiceTest {
 
     @BeforeEach
     public void setup() {
-        orderService = new OrderService(orderRepository, iProductService, iEligibilityService, orderMapper, messageProducer, cisWebService, iFulfilmentService, iDocumentService);
+        orderService = new OrderService(orderRepository, iProductService, iEligibilityService, orderMapper, messageProducer, cisWebService, iFulfilmentService, iDocumentService, iNotificationService);
         mockProductEntity = Product.builder()
                 .productId(1L)
                 .Name("Product")

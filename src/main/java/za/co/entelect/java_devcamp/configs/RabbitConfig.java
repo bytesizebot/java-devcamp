@@ -19,8 +19,12 @@ public class RabbitConfig {
     public static final String KYC_QUEUE = "kycCheckQueue";
     public static final String DHA_QUEUE = "dhaCheckQueue";
     public static final String CC_QUEUE = "creditCheckQueue";
+    public static final String FRAUD_QUEUE = "creditCheckQueue";
     public static final String RETRY_QUEUE = "fulfilmentCheck.retry.queue";
     public static final String DLQ = "Fulfilment.dlq";
+    public static final String RESULTA_QUEUE = "resultQueue";
+    public static final String RESULTB_QUEUE = "resultQueue";
+    public static final String RESULTC_QUEUE = "resultQueue";
 
     //exchanges
     public static final String EXCHANGE_NAME = "FulfilmentExchange";
@@ -48,23 +52,31 @@ public class RabbitConfig {
     @Bean
     public Queue ccQueue() {
         return new Queue(CC_QUEUE, true);
+    }    @Bean
+    public Queue fraudQueue() {
+        return new Queue(FRAUD_QUEUE, true);
+    }
+
+    @Bean
+    public Queue resultAQueue() {
+        return new Queue(RESULTA_QUEUE, true);
+    }
+    public Queue resultBQueue() {
+        return new Queue(RESULTB_QUEUE, true);
+    }
+    public Queue resultCQueue() {
+        return new Queue(RESULTC_QUEUE, true);
     }
 
     @Bean
     public Queue mainQueue() {
-        return QueueBuilder.durable("mainQueue")
-                .withArgument("x-dead-letter-exchange", "dlxExchange")
-                .withArgument("x-dead-letter-routing-key", "dlq")
-                .build();
+        return QueueBuilder.durable("mainQueue").withArgument("x-dead-letter-exchange", "dlxExchange").withArgument("x-dead-letter-routing-key", "dlq").build();
     }
 
 
     @Bean
     public Queue retryQueue() {
-        return QueueBuilder.durable(RETRY_QUEUE)
-                .withArgument("x-dead-letter-exchange", EXCHANGE_NAME)
-                .withArgument("x-dead-letter-routing-key", ROUTING_KEY)
-                .withArgument("x-message-ttl", 5000) // 5 sec retry delay
+        return QueueBuilder.durable(RETRY_QUEUE).withArgument("x-dead-letter-exchange", EXCHANGE_NAME).withArgument("x-dead-letter-routing-key", ROUTING_KEY).withArgument("x-message-ttl", 5000) // 5 sec retry delay
                 .build();
     }
 
@@ -77,6 +89,7 @@ public class RabbitConfig {
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE_NAME);
     }
+
     @Bean
     public DirectExchange dlxExchange() {
         return new DirectExchange(DLX_EXCHANGE);
@@ -86,26 +99,20 @@ public class RabbitConfig {
     public Binding binding(Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
     }
+
     @Bean
     public Binding retryBinding() {
-        return BindingBuilder.bind(retryQueue())
-                .to(dlxExchange())
-                .with("retry");
+        return BindingBuilder.bind(retryQueue()).to(dlxExchange()).with("retry");
     }
 
     @Bean
     public Binding dlqBinding() {
-        return BindingBuilder.bind(deadLetterQueue())
-                .to(dlxExchange())
-                .with("dlq");
+        return BindingBuilder.bind(deadLetterQueue()).to(dlxExchange()).with("dlq");
     }
 
     @Bean
     public Queue delayedQueue() {
-        return QueueBuilder.durable("delayed-queue")
-                .withArgument("x-dead-letter-exchange", "")
-                .withArgument("x-dead-letter-routing-key", "my-queue")
-                .withArgument("x-message-ttl", 5000) // 5000 ms = 5 seconds
+        return QueueBuilder.durable("delayed-queue").withArgument("x-dead-letter-exchange", "").withArgument("x-dead-letter-routing-key", "my-queue").withArgument("x-message-ttl", 5000) // 5000 ms = 5 seconds
                 .build();
     }
 
@@ -113,7 +120,6 @@ public class RabbitConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
-
 
 
 }

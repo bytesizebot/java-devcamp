@@ -31,16 +31,6 @@ public class WebClientController implements DhaApi  {
         this.creditClient = creditClient;
         this.fraudClient = fraudClient;
     }
-//    private final SoapClient soapClient;
-//
-//    @Value("${remote.api.url}")
-//    private String baseUrl;
-//
-//
-//    public WebClientController(IWebService IWebService, SoapClient soapClient) {
-//        this.IWebService = IWebService;
-//        this.soapClient = soapClient;
-//    }
 
     @PostMapping("/cis/register-profile")
     public ResponseEntity<ProfileDto> registerUserProfile(@RequestBody ProfileDto profileDto){

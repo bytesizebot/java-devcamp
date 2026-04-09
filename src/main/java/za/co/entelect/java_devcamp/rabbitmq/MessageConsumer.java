@@ -16,9 +16,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import za.co.entelect.java_devcamp.configs.RabbitConfig;
+import za.co.entelect.java_devcamp.creditcheck.CreditCheckResponse;
+import za.co.entelect.java_devcamp.fraudcheck.FraudCheckResponse;
 import za.co.entelect.java_devcamp.request.FulfillmentRequest;
 import za.co.entelect.java_devcamp.response.FulfilmentResponse;
 import za.co.entelect.java_devcamp.serviceinterface.IFulfilmentService;
+import za.co.entelect.java_devcamp.soap.CreditClient;
+import za.co.entelect.java_devcamp.soap.FraudClient;
 import za.co.entelect.java_devcamp.util.MaskingUtils;
 import za.co.entelect.java_devcamp.webclient.DHAWebService;
 import za.co.entelect.java_devcamp.webclient.KYCWebService;
@@ -38,6 +42,8 @@ public class MessageConsumer {
     private final DHAWebService dhaWebService;
     private final IFulfilmentService iFulfilmentService;
     private final ObjectMapper objectMapper;
+    private final CreditClient creditClient;
+    private final FraudClient fraudClient;
 
     @RabbitListener(queues = RabbitConfig.QUEUE_NAME, ackMode = "MANUAL")
     public void listen(Message message, Channel channel) throws Exception {
@@ -79,7 +85,6 @@ public class MessageConsumer {
 
                     } else if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
                         log.info("KYC not found for customerId={}", request.getCustomerId());
-                        kycResponse = null;
                         break;
 
                     } else {
@@ -99,8 +104,11 @@ public class MessageConsumer {
             }
 
             channel.basicAck(tag, false);
-            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), false);
-            iFulfilmentService.processTypeACheck(kycResponse, fulfilmentResponse);
+            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
+            if (request.getFulfillmentType().equals("A")) {
+                iFulfilmentService.processKYCCheck(kycResponse, fulfilmentResponse);
+            }
+
 
         } catch (Exception e) {
             log.error("Failed to process message after retries", e);
@@ -124,6 +132,10 @@ public class MessageConsumer {
         doCreditCheck(message, channel, tag);
     }
 
+    @RabbitListener(queues = RabbitConfig.FRAUD_QUEUE, ackMode = "MANUAL")
+    public void listenToFraudQueue(String message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
+        doFraudCheck(message, channel, tag);
+    }
 
     public void doLivingStatusCheck(String message, Channel channel, long tag) {
         try {
@@ -147,7 +159,6 @@ public class MessageConsumer {
 
                     } else if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
                         log.info("Living status information not found for customer with idNumber={}", MaskingUtils.maskId(request.getCustomerIdNumber()));
-                        livingStatusResponse = null;
                         break;
 
                     } else {
@@ -167,7 +178,7 @@ public class MessageConsumer {
             }
 
             channel.basicAck(tag, false);
-            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), false);
+            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
             iFulfilmentService.processLivingStatusCheck(livingStatusResponse, fulfilmentResponse);
 
         } catch (Exception e) {
@@ -222,7 +233,7 @@ public class MessageConsumer {
             }
 
             channel.basicAck(tag, false);
-            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), false);
+            FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
             iFulfilmentService.processDuplicateIdCheck(duplicateIDResponse, fulfilmentResponse);
 
         } catch (Exception e) {
@@ -278,7 +289,7 @@ public class MessageConsumer {
                 }
 
                 channel.basicAck(tag, false);
-                FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), false);
+                FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
                 iFulfilmentService.processMaritalStatusCheck(maritalStatusResponse, fulfilmentResponse);
             }
         } catch (Exception e) {
@@ -291,11 +302,115 @@ public class MessageConsumer {
         }
     }
 
-    public void doCreditCheck(String message, Channel channel, long tag){
+    public void doCreditCheck(String message, Channel channel, long tag) {
+        try {
+            FulfillmentRequest request = objectMapper.readValue(message, FulfillmentRequest.class);
+            if (Objects.equals(request.getFulfillmentType(), "C")) {
+                log.info("Processing DHA Marital Status check for customer orderId: {}", MaskingUtils.maskId(request.getCorrelationId()));
 
+                CreditCheckResponse creditCheckResponse = null;
+                int maxRetries = 3;
+                int attempt = 0;
+
+                while (attempt < maxRetries) {
+                    try {
+                        creditCheckResponse = creditClient.getCreditCheck(request.getCustomerId().intValue());
+                        break;
+
+                    } catch (WebClientResponseException ex) {
+                        if (ex.getStatusCode().is5xxServerError()) {
+                            attempt++;
+                            log.warn("Server error (attempt {}/{}): {}", attempt, maxRetries, ex.getResponseBodyAsString());
+                            Thread.sleep((long) Math.pow(2, attempt) * 1000);
+
+                        } else if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            log.info("Marital status information not found for customer with idNumber={}", MaskingUtils.maskId(request.getCustomerIdNumber()));
+                            creditCheckResponse = null;
+                            break;
+
+                        } else {
+                            log.error("Client error calling DHA service: {}", ex.getResponseBodyAsString());
+                            throw ex;
+                        }
+
+                    } catch (WebClientRequestException ex) {
+                        attempt++;
+                        log.warn("Network error (attempt {}/{}): {}", attempt, maxRetries, ex.getMessage());
+                        Thread.sleep(1000 * attempt);
+
+                    } catch (Exception ex) {
+                        log.error("Unexpected error calling DHA service", ex);
+                        throw ex;
+                    }
+                }
+
+                channel.basicAck(tag, false);
+                FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
+                iFulfilmentService.processCreditCheck(creditCheckResponse, fulfilmentResponse);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process message after retries", e);
+            try {
+                channel.basicNack(tag, false, false);
+            } catch (IOException ioEx) {
+                log.error("Failed to nack message", ioEx);
+            }
+        }
     }
 
-    public void doFraudCheck(String message, Channel channel, long tag){
+    public void doFraudCheck(String message, Channel channel, long tag) {
+        try {
+            FulfillmentRequest request = objectMapper.readValue(message, FulfillmentRequest.class);
+            if (Objects.equals(request.getFulfillmentType(), "C")) {
+                log.info("Processing Fraud check for customer orderId: {}", MaskingUtils.maskId(request.getCorrelationId()));
 
+                FraudCheckResponse fraudCheckResponse = null;
+                int maxRetries = 3;
+                int attempt = 0;
+
+                while (attempt < maxRetries) {
+                    try {
+                        fraudCheckResponse = fraudClient.getFraudCheck(request.getCustomerId().intValue(),request.getCustomerIdNumber());
+                        break;
+
+                    } catch (WebClientResponseException ex) {
+                        if (ex.getStatusCode().is5xxServerError()) {
+                            attempt++;
+                            log.warn("Server error (attempt {}/{}): {}", attempt, maxRetries, ex.getResponseBodyAsString());
+                            Thread.sleep((long) Math.pow(2, attempt) * 1000);
+
+                        } else if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            log.info("Fraud information not found for customer with idNumber={}", MaskingUtils.maskId(request.getCustomerIdNumber()));
+                            fraudCheckResponse = null;
+                            break;
+
+                        } else {
+                            log.error("Client error calling Fraud service: {}", ex.getResponseBodyAsString());
+                            throw ex;
+                        }
+
+                    } catch (WebClientRequestException ex) {
+                        attempt++;
+                        log.warn("Network error (attempt {}/{}): {}", attempt, maxRetries, ex.getMessage());
+                        Thread.sleep(1000 * attempt);
+
+                    } catch (Exception ex) {
+                        log.error("Unexpected error calling Fraud service", ex);
+                        throw ex;
+                    }
+                }
+
+                channel.basicAck(tag, false);
+                FulfilmentResponse fulfilmentResponse = new FulfilmentResponse(request.getOrderId(), request.getCorrelationId(), request.getCustomerId(), request.getFulfillmentType(), false);
+                iFulfilmentService.processFraudCheck(fraudCheckResponse, fulfilmentResponse);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process message after retries", e);
+            try {
+                channel.basicNack(tag, false, false);
+            } catch (IOException ioEx) {
+                log.error("Failed to nack message", ioEx);
+            }
+        }
     }
 }
