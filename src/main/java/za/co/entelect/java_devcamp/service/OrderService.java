@@ -38,7 +38,6 @@ public class OrderService implements IOrderService {
     private final OrderMapper orderMapper;
     private final MessageProducer messageProducer;
     private final CISWebService cisWebService;
-   // private final IFulfilmentService iFulfilmentService;
     private final IDocumentService iDocumentService;
     private final INotificationService iNotificationService;
     private final IProfileService iProfileService;
@@ -60,18 +59,17 @@ public class OrderService implements IOrderService {
     @Override
     public Order createOrder(String customerEmail, Long productId) {
         log.info("Creating order because the customer is eligible for a product");
-        //check if order exists in pending state
         Product product = iProductService.getProductById(productId);
         CustomerDto customer = cisWebService.getCustomerByEmail(customerEmail);
 
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer profile not found");
+        }
         Eligibility eligibility = iEligibilityService.getEligibilityByProductIdAndCustomerId(customer.getId(), productId);
 
         if (!eligibility.getResult()) {
             throw new ProductTakeupFailedException("Customer cannot take up product. Ensure customer is eligible first.");
         } else {
-            if (customer == null) {
-                throw new ResourceNotFoundException("Customer profile not found");
-            }
             Order productOrder = new Order();
 
             productOrder.setCustomerId(customer.getId());
@@ -84,16 +82,16 @@ public class OrderService implements IOrderService {
             productOrder.addProducts(item);
 
             orderRepository.save(productOrder);
-            String subject = "Received Order request created with OrderID: " + productOrder.getOrderId().toString();
-            Notification notification = new Notification(customer.getUsername(),subject,NotificationContent.Order_created);
+            Long orderId = productOrder.getOrderId();
+            String subject = "Received Order request created with OrderID: " + orderId.toString();
+            Notification notification = new Notification(customer.getUsername(), subject, NotificationContent.Order_created);
             iNotificationService.sendNotification(notification);
 
-           // iFulfilmentService.determineFulfillmentCheck(productOrder, customer.getId(), customer.getIdNumber());
 
             String correlationId = UUID.randomUUID().toString();
             String fulfilmentType = String.valueOf(product.getFulfilmentType().getName());
-            FulfilmentRequest fulfilmentRequest = new FulfilmentRequest(customer.getId(), customer.getIdNumber(), fulfilmentType, 79L,correlationId);
-            FulfilmentResponse fulfilmentResponse =  orderProducer.sendOrderForFulfilment(fulfilmentRequest);
+            FulfilmentRequest fulfilmentRequest = new FulfilmentRequest(customer.getId(), customer.getIdNumber(), fulfilmentType, orderId, correlationId);
+            FulfilmentResponse fulfilmentResponse = orderProducer.sendOrderForFulfilment(fulfilmentRequest);
 
             log.info("Completed fulfilling orders");
             assert fulfilmentResponse != null;
@@ -116,30 +114,29 @@ public class OrderService implements IOrderService {
     @Override
     public void completeOrder(FulfilmentResponse fulfillmentResponse) {
         log.info("Completing order for orderId: {}", fulfillmentResponse.getOrderId());
-        Long orderId = 72L;
-                //fulfillmentResponse.getOrderId();
+        Long orderId = fulfillmentResponse.getOrderId();
         Profile customerProfile = iProfileService.getProfileByIdNumber(fulfillmentResponse.getCustomerIdNumber());
 
-        if(fulfillmentResponse.isSuccessful()){
+        if (fulfillmentResponse.isSuccessful()) {
             updateOrderStatus(orderId, Status.APPROVED);
-            log.info("Order for customer with ID: {} has been approved! Yay.",fulfillmentResponse.getCustomerId());
+            log.info("Order for customer with ID: {} has been approved! Yay.", fulfillmentResponse.getCustomerId());
 
             //Generate contract Url call document service
             String subject = "Successful Order for OrderID " + orderId.toString();
-            Notification notification = new Notification(customerProfile.getEmailAddress(),subject, NotificationContent.Order_completed_success);
+            Notification notification = new Notification(customerProfile.getEmailAddress(), subject, NotificationContent.Order_completed_success);
             iNotificationService.sendNotification(notification);
 
-          //  iDocumentService.generateCustomerContract(products, customerProfile);
-        }else{
+            //  iDocumentService.generateCustomerContract(products, customerProfile);
+        } else {
             updateOrderStatus(fulfillmentResponse.getOrderId(), Status.DECLINED);
-            log.info("Order for customer with ID: {} has been declined. Order request unsuccessful.",fulfillmentResponse.getCustomerId());
-            String subject = "Unsuccessful Order for OrderID " + orderId.toString() ;
+            log.info("Order for customer with ID: {} has been declined. Order request unsuccessful.", fulfillmentResponse.getCustomerId());
+            String subject = "Unsuccessful Order for OrderID " + orderId.toString();
             String failReason = fulfillmentResponse.getFailureReason();
             String message = String.format(
                     NotificationContent.Order_completed_failure,
                     failReason
             );
-            Notification notification = new Notification(customerProfile.getEmailAddress(),subject, message );
+            Notification notification = new Notification(customerProfile.getEmailAddress(), subject, message);
             iNotificationService.sendNotification(notification);
 
         }
